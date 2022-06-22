@@ -94,7 +94,6 @@
 
       .segment-band {
         stroke: white;
-        stroke: #fbd914;
         stroke-width: 2px;
       }
 
@@ -102,9 +101,9 @@
         fill: white;
         text-anchor: middle;
         font-weight: bold;
-        font-size: 7px;
+        font-size: 6.5px;
         font-family: "Graphik Bold";
-        letter-spacing: 0.7px;
+        letter-spacing: 0.5px;
       }
 
       .label-text {
@@ -116,7 +115,7 @@
       }
 
       .theme-label-text {
-        fill: white;
+        fill: #0058ab;
         text-anchor: middle;
         font-weight: bold;
         font-size: 11px;
@@ -1522,7 +1521,7 @@
 
       var width = 800,
         height = 860,
-        innerRadius = 50,
+        innerRadius = 60,
         outerRadius = 300,
         nodeRadius = 3.3,
         nodeOtherWidth = 5,
@@ -1634,7 +1633,7 @@
       var chartTitle = chartSVG
         .append("text")
         .attr("class", "chart-title")
-        .text("INGKA")
+        .text("INGKA Life at Work Compass")
         .attr("y", (-height * 4.55) / 10)
         .style("display", "none");
   
@@ -2182,7 +2181,7 @@
             var themeArc = d3
               .arc()
               .innerRadius(330)
-              .outerRadius(360);
+              .outerRadius(372);
   
             var chartPie = d3
               .pie()
@@ -2311,9 +2310,9 @@
               .enter()
               .append("path")
               .attr("d", themeArc)
-              .attr("fill", "#0058ab")
-              .style("stroke", "#fbd914")
-              .style("stroke-width", "2px")
+              .attr("fill", "#fbdb1e")
+              .attr("stroke-width", "2px")
+              .attr("stroke", "#fff")
               .each(function(d, i) {
                 var firstArcSection = /(^.+?)L/;
                 var newArc = firstArcSection.exec(d3.select(this).attr("d"))[1];
@@ -2384,13 +2383,13 @@
   
             var segmentLabelBandArc = d3
               .arc()
-              .innerRadius(outerRadius)
-              .outerRadius(outerRadius * 1.095);
+              .innerRadius(300)
+              .outerRadius(307 * 1.095);
 
             var labelWidth = (2 * outerRadius * 1.095) / chartPieData.length;
 
             labelFontData = {
-              limit: labelWidth * 0.6
+              limit: labelWidth * 2
             };
   
             // compass arcs
@@ -2478,29 +2477,49 @@
               .attr("dy", function(d, i) {
                 if (d.percentage >= 25 && d.percentage <= 75) {
                   if (d.lineLength === 1) {
-                    return "-1.6em";
+                    return "-2.6em";
+                  } else if (d.lineLength === 2) {
+                    if (i === 0) {
+                      return "-3em";
+                    } else if ( i === 1 ){
+                      return "-1em";
+                    } else {
+                      return "0em"
+                    }
                   } else {
                     if (i === 0) {
-                      return "-2.3em";
+                      return "-3.5em";
+                    } else if ( i === 1 ){
+                      return "-2.2em";
                     } else {
-                      return "-1em";
+                      return "-0.7em"
                     }
                   }
                 } else {
                   if (d.lineLength === 1) {
-                    return "2.4em";
+                    return "3.4em";
+                  } else if(d.lineLength === 2){
+                    if (i === 0) {
+                      return "2em";
+                    } else if (i === 1) {
+                      return "3.7em";
+                    } else {
+                      return "4em";
+                    }
                   } else {
                     if (i === 0) {
                       return "1.9em";
-                    } else {
+                    } else if (i === 1) {
                       return "3em";
+                    } else {
+                      return "4em";
                     }
                   }
                 }
               })
               .append("textPath")
               .attr("xlink:href", function(d, i) {
-                const _dataTextValue = Array.isArray(d.data) ? d.data[0] : d.data;
+                const _dataTextValue = Array.isArray(d.text_data) ? d.text_data[0] : d.text_data;
                 const labelPath = _dataTextValue.split(" ")
                 let labelPathId;
                 if(labelPath[0] != ""){
@@ -2512,7 +2531,7 @@
                 );
               })
               .attr("startOffset", "50%")
-              .attr("font-size", "7px")
+              .attr("font-size", "6.5px")
               .text(function(d) {
                 return d.data
               });
@@ -3111,14 +3130,14 @@
             }
 
             // wrap text on compass label
-            function textWrap(text_data, percentage, limit = 6, dataIdx) {
+            function textWrap(text_data, percentage, limit = 19, dataIdx) {
               result = [];
-              if (text_data.length > limit) {
-                if (text_data.length >= (limit -1)* 2) {
-                  a = text_data.substr(0, limit).lastIndexOf(" ")
+              if (text_data.length > 19) {
+                if (text_data.length <= 20) {
+                  a = text_data.substr(0, 19).lastIndexOf(" ")
                   y = text_data.substr(0, a)
                   a_rem = text_data.substr(a + 1)
-                  b = a_rem.substr(0, limit).lastIndexOf(" ")
+                  b = a_rem.substr(0, 19).lastIndexOf(" ")
                   z = a_rem.substr(0, b)
                   result.push({
                     data: y,
@@ -3128,10 +3147,42 @@
                     dataIdx: dataIdx,
                   });
                   result.push({
-                    data: z + "...",
+                    data: z,
                     text_data: text_data,
                     percentage: percentage,
                     lineLength: 2,
+                    dataIdx: dataIdx,
+                  });
+                } else if(text_data.length > 30){
+                  a = text_data.substr(0, 20).lastIndexOf(" ")
+                  y = text_data.substr(0, a)
+
+                  a_rem = text_data.substr(a + 1)
+                  
+                  b = a_rem.substr(0, 20).lastIndexOf(" ")
+                  z = a_rem.substr(0, b)
+                 
+                  x = a_rem.split(z)[1]
+
+                  result.push({
+                    data: y,
+                    text_data: text_data,
+                    percentage: percentage,
+                    lineLength: 3,
+                    dataIdx: dataIdx,
+                  });
+                  result.push({
+                    data: z,
+                    text_data: text_data,
+                    percentage: percentage,
+                    lineLength: 3,
+                    dataIdx: dataIdx,
+                  });
+                  result.push({
+                    data: x,
+                    text_data: text_data,
+                    percentage: percentage,
+                    lineLength: 3,
                     dataIdx: dataIdx,
                   });
                 } else {
