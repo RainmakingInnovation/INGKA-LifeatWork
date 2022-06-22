@@ -101,7 +101,7 @@
           fill: white;
           text-anchor: middle;
           font-weight: bold;
-          font-size: 6.5px;
+          font-size: 6.3px;
           font-family: "Graphik Bold";
           letter-spacing: 0.5px;
         }
@@ -1649,20 +1649,34 @@
           .attr("x", -titleLogoWidth / 2)
           .style("display", "none");
 
-        d3.csv("ingkaData.csv").then(function(data) {
-          data = data.filter(row => row['Founded'].trim() != '#N/A' && row['Founded'].trim() != '')
+        d3.csv("ingkaNewData.csv").then(function(dat) {
+          let data = dat.filter(row => 
+          row['Founded'].trim() != '#N/A' 
+          && 
+          row['Founded'].trim() != '' 
+          &&
+          row['Inc.-Compass'] ==  1
+          )
+          
+          data.forEach(row => {
+            if(row['Opportunity-Space'].includes('(')){
+              row['Opportunity-Space'] = (row['Opportunity-Space'].split(') '))[1]
+            } else {
+              row['Opportunity-Space'] = row['Opportunity-Space']
+            }
             
+          })
           var check = d3.nest()
-            .key(function(d) {
+          .key(function(d) {
               return d['Focus-Area']
             })
             .key(function(d) {
               return d['Opportunity-Space']
             })
             .entries(data);
-
-          let focusArea = [];
-          data.forEach(row => {
+            
+            let focusArea = [];
+            data.forEach(row => {
             if(row['Focus-Area'].trim() == 'Space Design & Mgmt'){
               row['Focus-Area'] = 'Space Design & Management'
             }
@@ -2084,7 +2098,7 @@
                 })
                 .rollup(function(v) {
                   var totalFunding = d3.sum(v, function(d) {
-                    return +d["Total Funding Amount Currency (in USD)"];
+                    return +d["Total-Funding"];
                   });
                   return totalFunding;
                 })
@@ -2181,7 +2195,7 @@
               var themeArc = d3
                 .arc()
                 .innerRadius(330)
-                .outerRadius(372);
+                .outerRadius(370);
     
               var chartPie = d3
                 .pie()
@@ -2383,7 +2397,7 @@
     
               var segmentLabelBandArc = d3
                 .arc()
-                .innerRadius(300)
+                .innerRadius(304)
                 .outerRadius(307 * 1.095);
 
               var labelWidth = (2 * outerRadius * 1.095) / chartPieData.length;
@@ -2531,7 +2545,7 @@
                   );
                 })
                 .attr("startOffset", "50%")
-                .attr("font-size", "6.5px")
+                .attr("font-size", "6.3px")
                 .text(function(d) {
                   return d.data
                 });
@@ -2814,7 +2828,6 @@
                 })
                 .entries(data);
 
-
               var nodeList = [];
 
               var nodeSecondList = [];
@@ -2834,7 +2847,7 @@
                 
                 for (i = 0; i < count_by_year.length; i++) {
                   if (d["Founded"] === count_by_year[i].key) {
-                    tmp_innerRadiusMin = count_by_year[i]["inner"]
+                    tmp_innerRadiusMin = count_by_year[i]["inner"] 
                     tmp_outerRadiusMax = count_by_year[i]["outer"]
                     break;
                   }
@@ -2852,7 +2865,7 @@
                             radiusSize,
                             nodeSecondData[i].values[j].value
                             )
-                            if (congestion > 5) {
+                            if (congestion > 3) {
                               d.resultsYear = assignRandom(
                                 tmp_startAngleMin,
                                 tmp_endAngleMax,
@@ -2905,11 +2918,10 @@
             function toggleGlobalEurope(){
               if (stateEurope == "global"){
                 stateEurope = "europe";
-
                 // display Europe countries
                 nodes.attr("opacity", (d) => {
                   if(d.Country == "Europe" && (
-                    stateHero == 'all' || (stateHero == 'hero' && d.Hero != 'FALSE')
+                    stateHero == 'all' || (stateHero == 'hero' && d.Hero == '1')
                   )){
                     return 1;
                   } else {
@@ -2918,7 +2930,7 @@
                 })
                 nodes_acquired.attr("opacity", (d) => {
                   if(d.Country == "Europe" && (
-                    stateHero == 'all' || (stateHero == 'hero' && d.Hero != 'FALSE')
+                    stateHero == 'all' || (stateHero == 'hero' && d.Hero == '1')
                   )){
                     return 1;
                   } else {
@@ -2930,10 +2942,10 @@
                 stateEurope = "global";
                 // display all countries
                 nodes.attr("opacity", (d) => {
-                  return (stateHero == 'all' || (stateHero == 'hero' && d.Hero != 'FALSE')) ? 1 : 0.3;
+                  return (stateHero == 'all' || (stateHero == 'hero' && d.Hero == '1')) ? 1 : 0.3;
                 });
                 nodes_acquired.attr("opacity", (d) => {
-                  return (stateHero == 'all' || (stateHero == 'hero' && d.Hero != 'FALSE')) ? 1 : 0.3;
+                  return (stateHero == 'all' || (stateHero == 'hero' && d.Hero == '1')) ? 1 : 0.3;
                 });
               }
             }
@@ -2943,7 +2955,7 @@
                 stateHero = 'hero';
                 // display hero
                 nodes.attr('opacity', (d) => {
-                  if(d.Hero != 'FALSE' && (
+                  if(d.Hero == '1' && (
                     stateEurope == 'global' || (stateEurope == 'europe' && d.Country == 'Europe')
                     )){
                       return 1;
@@ -2952,7 +2964,7 @@
                   }
                 })
                 nodes_acquired.attr('opacity', (d) => {
-                  if(d.Hero != 'FALSE' && (
+                  if(d.Hero == '1' && (
                     stateEurope == 'global' || (stateEurope == 'europe' && d.Country == 'Europe')
                     )){
                       return 1;
@@ -3001,14 +3013,15 @@
 
               const legendItemsNames = ["Seed", "Series A", "Series B", "Series C"];
 
+              
               // circle nodes in compass
               var nodes = chartSVG
-                .selectAll("nodes")
-                .data(data)
-                .enter()
-                .append("a")
-                .attr("xlink:href", function(d) {
-                  return d['Website']
+              .selectAll("nodes")
+              .data(data)
+              .enter()
+              .append("a")
+              .attr("xlink:href", function(d) {
+                return d['Website']
                 })
                 .attr("target", "_blank")
                 .append("circle")
@@ -3029,14 +3042,14 @@
                 })
                 .attr("fill", function(d) {
                   return nodeColorScale(
-                      fundingCategoryScale(d["Funding-Stage"])
+                    fundingCategoryScale(d["Funding-Stage"])
                     );
-                })
-                .on("mouseover", function(d) {
-                  showNodeTooltip(d)
-                })
-                .on("mouseout", hideNodeTooltip)
-              
+                  })
+                  .on("mouseover", function(d) {
+                    showNodeTooltip(d)
+                  })
+                  .on("mouseout", hideNodeTooltip)
+
               // rectangular nodes in compass
               var nodes_acquired = chartSVG
                 .selectAll("nodes-acquired")
@@ -3766,9 +3779,9 @@
                 || 
                 (stateHero == 'all' && stateEurope == 'europe' && _d.Country == 'Europe') 
                 ||
-                (stateHero == 'hero' && _d.Hero != 'FALSE' && stateEurope == 'global') 
+                (stateHero == 'hero' && _d.Hero == '1' && stateEurope == 'global') 
                 || 
-                (stateHero == 'hero' && _d.Hero != 'FALSE' && stateEurope == 'europe' && _d.Country == 'Europe') 
+                (stateHero == 'hero' && _d.Hero == '1' && stateEurope == 'europe' && _d.Country == 'Europe') 
               ) ? 1 : 0.3;
             }
             // label compass on mouse out  ------------------------------------------------------------------------------------------------
@@ -3863,7 +3876,7 @@
                   segmentFunding = d3.sum(
                     count_by_focus_area[i].values,
                     function(d) {
-                      return d["Total-Funding-(USD)"];
+                      return d["Total-Funding"];
                     }
                   );
                 }
@@ -3884,14 +3897,14 @@
             function showNodeTooltip(d) {      
               const fundingList = ["Unfunded"]
               let fundingVal = 0
-              if (fundingList.indexOf(d["Funding Stage"]) < 0) {
-                if (d["Total-Funding-(USD)"] == 0) {
+              if (fundingList.indexOf(d["Funding-Stage"]) < 0) {
+                if (d["Total-Funding"] == 0) {
                   fundingVal = "Undisclosed"
                 } else {
-                  fundingVal = "$" + formatFunding(d["Total-Funding-(USD)"])
+                  fundingVal = "$" + formatFunding(d["Total-Funding"])
                 }
               } else {
-                fundingVal = "$" + formatFunding(d["Total-Funding-(USD)"])
+                fundingVal = "$" + formatFunding(d["Total-Funding"])
               }
               if (fundingVal == "$-") {
                 fundingVal = "-"
