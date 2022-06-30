@@ -89,7 +89,7 @@
         }
 
         .nascent-segments {
-          fill: #f4f4f4
+          fill: #f4f4f4;
         }
 
         .segment-band {
@@ -1489,7 +1489,7 @@
         <div>
           <div>
             <div class="button b2" id="button-16">
-              <input type="checkbox" class="checkbox"  disabled value="disabled"  />
+              <input type="checkbox" class="checkbox"   />
               <div class="knobs"></div>
               <div class="layer"></div>
             </div>
@@ -1649,15 +1649,15 @@
           .attr("x", -titleLogoWidth / 2)
           .style("display", "none");
 
-        d3.csv("ingkaNewData.csv").then(function(dat) {
-          let data = dat.filter(row => 
-          row['Founded'].trim() != '#N/A' 
-          && 
-          row['Founded'].trim() != '' 
-          &&
-          row['Inc.-Compass'] ==  1
-          )
-          
+        d3.csv("dataIngka2.csv").then(function(data) {
+          // console.log(data)
+          // let data = dat.filter(row => 
+          // row['Founded'].trim() != '#N/A' 
+          // && 
+          // row['Founded'].trim() != '' 
+          // &&
+          // row['Inc.-Compass'] ==  1
+          // )
           data.forEach(row => {
             if(row['Opportunity-Space'].includes('(')){
               row['Opportunity-Space'] = (row['Opportunity-Space'].split(') '))[1]
@@ -2268,6 +2268,7 @@
                       "-" +
                       d.data.value.key.replace(/ /g, "-").replace(/&/g, "and") +
                       "-segment"
+                      + d.index
                     );
                   })
                   .attr("d", tmpArc)
@@ -2296,6 +2297,7 @@
                       keyValue[0] +
                       // d.data.value.key.replace(/ /g, "-").replace(/[\])}[{(]/g, '').replace(/&/g, "and").replace(/,/g, '') +
                       "-segment"
+                      + d.index
                     );
                   })
                   .attr("d", tmpArc)
@@ -2834,6 +2836,72 @@
 
               var tmp_startAngleMin;
               var tmp_endAngleMax;
+
+            // position maturity node in the compass
+            data.forEach(function(d) {
+              for (i = 0; i < chartPieData.length; i++) {
+                if (d["Opportunity-Space"] === chartPieData[i].data.value.key && d["Focus-Area"] === chartPieData[i].data.value.parent) {
+                  var tmp_startAngleMin = chartPieData[i].startAngle
+                  var tmp_endAngleMax = chartPieData[i].endAngle
+                  break;
+                }
+              }
+              for (i = 0; i < maturity_list.length; i++) {
+                if (d["Maturity"] === maturity_list[i]["name"]) {
+                  tmp_innerRadiusMin = maturity_list[i]["inner"]
+                  tmp_outerRadiusMax = maturity_list[i]["outer"]
+                  break;
+                }
+              }
+              for (i = 0; i < nodeData.length; i++) {
+                if (nodeData[i].key === d["Opportunity-Space"] + "-" +d["Focus-Area"]) {
+                  for (j = 0; j < nodeData[i].values.length; j++) {
+                    if (nodeData[i].values[j].key === d["Maturity"]) {
+                      
+                      var congestion = calcCongestion(
+                        tmp_startAngleMin,
+                        tmp_endAngleMax,
+                        tmp_innerRadiusMin,
+                        tmp_outerRadiusMax,
+                        radiusSize,
+                        nodeData[i].values[j].value
+                      )
+                      if (congestion > 1) {
+                        d.results = assignRandom(
+                          tmp_startAngleMin,
+                          tmp_endAngleMax,
+                          tmp_innerRadiusMin,
+                          tmp_outerRadiusMax,
+                          congestion,
+                          nodeList
+                        );  
+                        
+                      } else {
+                        d.results = assignNonRandom(
+                          d,
+                          tmp_startAngleMin,
+                          tmp_endAngleMax,
+                          tmp_innerRadiusMin,
+                          tmp_outerRadiusMax,
+                          nodeData[i].values[j]
+                        )
+                        indexTracker[d["Opportunity-Space"]][d["Maturity"]]["slot"] += 1
+                      }
+                    }
+                  }
+                }
+              }
+
+              if (d.results) {
+              d.x = d.results[0];
+              d.y = d.results[1];
+              } else {
+              d.x = 0//results[0];
+              d.y = 0//results[1];
+              }
+              d.opacity = 1;
+            });
+
               // position year nodes
               data.forEach(function(d) {
                 for (i = 0; i < chartPieData.length; i++) {
@@ -2865,7 +2933,7 @@
                             radiusSize,
                             nodeSecondData[i].values[j].value
                             )
-                            if (congestion > 3) {
+                            if (congestion > 5) {
                               d.resultsYear = assignRandom(
                                 tmp_startAngleMin,
                                 tmp_endAngleMax,
@@ -2910,6 +2978,8 @@
                   }
                   
               });
+
+            
 
             // toggleGlobalEurope function --------------------------------------------------------------------------------------------
             let stateEurope = "global";
@@ -3627,16 +3697,16 @@
                     };
                   });
 
-                // nodes_acquired
-                //   .transition()
-                //   .duration(animationDuration)
-                //   .attrTween("transform", function(d) {
-                //     var i = d3.interpolate(d.x, d.yearX);
-                //     var j = d3.interpolate(d.y, d.yearY);
-                //     return function(t) {
-                //       return "translate(" + i(t) + "," + j(t) + ") rotate(45)";
-                //     };
-                //   });
+                nodes_acquired
+                  .transition()
+                  .duration(animationDuration)
+                  .attrTween("transform", function(d) {
+                    var i = d3.interpolate(d.x, d.yearX);
+                    var j = d3.interpolate(d.y, d.yearY);
+                    return function(t) {
+                      return "translate(" + i(t) + "," + j(t) + ") rotate(45)";
+                    };
+                  });
 
                 maturity_list.forEach(function(d) {
                   var id = "#" + d.name.toLowerCase() + "-label-path-text";
@@ -3661,12 +3731,12 @@
                         "-" +
                         yearSegId[0] +
                         "-segment"
+                        + v.index
                     ).attr("opacity", 1);
                   });
                 });
               } else {
                 radial = "maturity";
-
                 nodes
                   .transition()
                   .duration(animationDuration)
@@ -3683,29 +3753,29 @@
                     };
                   });
 
-                // nodes_acquired
-                //   .transition()
-                //   .duration(animationDuration)
-                //   .attrTween("transform", function(d) {
-                //     var i = d3.interpolate(d.yearX, d.x);
-                //     var j = d3.interpolate(d.yearY, d.y);
-                //     return function(t) {
-                //       return "translate(" + i(t) + "," + j(t) + ") rotate(45)";
-                //     };
-                //   });
+                nodes_acquired
+                  .transition()
+                  .duration(animationDuration)
+                  .attrTween("transform", function(d) {
+                    var i = d3.interpolate(d.yearX, d.x);
+                    var j = d3.interpolate(d.yearY, d.y);
+                    return function(t) {
+                      return "translate(" + i(t) + "," + j(t) + ") rotate(45)";
+                    };
+                  });
 
                 count_by_year.forEach(function(d) {
                   var id = "#year-" + d.key + "-label-path-text";
                   d3.select(id).remove();
                   chartPieData.forEach(function(v) {
                     const yearSegId = v.data.value.key.split(" ")
-                    d3.select(
-                      "#year-" +
+                    const _segId = "#year-" +
                         d.key +
                         "-" +
                         yearSegId[0] +
                         "-segment"
-                    ).attr("opacity", 0);
+                        + v.index;
+                    d3.select(_segId).attr("opacity", 0);
                   });
                 });
 
